@@ -27,7 +27,7 @@ jobs:
       with:
         path: qubership-logging-operator
 
-    - name: Set up Kind
+    - name: Set up kind
       run: |
         curl -sLo ./kind https://kind.sigs.k8s.io/dl/${{ env.kind_version }}/kind-linux-amd64
         chmod +x ./kind
@@ -35,7 +35,7 @@ jobs:
         kind create cluster
         docker exec kind-control-plane bash -c "mkdir - /var/log/audit && chown 1000:1000 /var/log/audit && echo 'Created /var/log/audit with the permissions:'; ls -ld  /var/log/audit"
 
-    - name: Install Helm
+    - name: Install helm
       run: |
         curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
@@ -85,7 +85,7 @@ jobs:
         EOF
       shell: bash
 
-    - name: Install Opensearch
+    - name: Install opensearch
       run: |
         helm upgrade --install opensearch \
           --namespace=${{ env.opensearch_namespace }} \
@@ -93,7 +93,7 @@ jobs:
           ./qubership-opensearch/charts/helm/opensearch-service \
           -f ./opensearch_values.yaml
 
-    - name: Check Opensearch Deployment Status
+    - name: Check opensearch deployment status
       run: |
         echo "Checking status of opensearch-status-provisioner..."
         attempt=1
@@ -120,7 +120,7 @@ jobs:
         fi
       shell: bash
 
-    - name: Check Opensearch Cluster Health
+    - name: Check opensearch cluster health
       run: |
         cluster_status=$(kubectl exec -n ${{ env.opensearch_namespace }} opensearch-0 -- curl -s http://localhost:9200/_cluster/health?pretty -u admin:admin)
         if [[ "echo $cluster_status | jq -r .status"  = "yellow" ]]; then
@@ -146,8 +146,9 @@ jobs:
             }
           ]
 
-    - name: Create Values For Logging Operator Installation
+    - name: Create values for logging operator installation
       run: |
+        echo ${{ github.repository_owner }}
         TAG="${GITHUB_SHA:0:11}"
         cat <<EOF > logging_values.yaml
         skipMetricsService: false
@@ -182,7 +183,7 @@ jobs:
         EOF
       shell: bash
 
-    - name: Install Qubership Logging Operator
+    - name: Install qubership logging operator
       run: |
         helm upgrade --install qubership-logging-operator \
           --namespace=${{ env.namespace }} \
@@ -192,7 +193,7 @@ jobs:
         sleep ${{ env.delay }}
       shell: bash
 
-    - name: Checking Logging Operator Status
+    - name: Checking logging operator status
       run: |
         echo "Checking status of logging-operator..."
         attempt=1
@@ -378,7 +379,7 @@ jobs:
         exit 1
       shell: bash
 
-    - name: Save Opensearch Artifacts
+    - name: Save opensearch artifacts
       if: always()
       run: |
         mkdir -p "artifacts/${{ env.opensearch_namespace }}"
@@ -401,7 +402,7 @@ jobs:
         done
       shell: bash
 
-    - name: Save Logging Artifacts
+    - name: Save logging artifacts
       if: always()
       run: |
         mkdir -p "artifacts/${{ env.namespace }}"
