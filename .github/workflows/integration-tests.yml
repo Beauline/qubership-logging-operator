@@ -30,7 +30,7 @@ jobs:
 
     - name: Set up kind
       run: |
-        echo "::warning::Test cluster will be deleted after tests are completed"
+        echo "::warning::⚠️Test cluster will be deleted after tests are completed"
         curl -sLo ./kind https://kind.sigs.k8s.io/dl/${{ env.kind_version }}/kind-linux-amd64
         chmod +x ./kind
         sudo mv ./kind /usr/local/bin/
@@ -104,10 +104,10 @@ jobs:
           echo "Attempt $attempt/$max_attempts: Checking opensearch-status-provisioner pod status..."
           phase=$(kubectl get pod -l name=opensearch-status-provisioner -n ${{ env.opensearch_namespace }} -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
           if [[ "$phase" == "Succeeded" ]]; then
-            echo "::notice::✅ Opensearch status provisioner job has succeeded."
+            echo "✅ Opensearch status provisioner job has succeeded."
             break
           elif [[ "$phase" == "Failed" || "$phase" == "Error" ]]; then
-            echo "::error::Opensearch status provisioner job failed with status: $phase"
+            echo "::error::❌ Opensearch status provisioner job failed with status: $phase"
             exit 1
           else
             echo "Opensearch status provisioner job status: $phase. Retrying in ${{ env.delay }} seconds..."
@@ -117,7 +117,7 @@ jobs:
           fi
         done
         if [[ "$phase" != "Succeeded" ]]; then
-          echo "::error::ERROR: Maximum attempts reached. Opensearch status provisioner job has not succeeded."
+          echo "::error::❌ Maximum attempts reached. Opensearch status provisioner job has not succeeded."
           exit 1
         fi
       shell: bash
@@ -126,11 +126,16 @@ jobs:
       run: |
         cluster_status=$(kubectl exec -n ${{ env.opensearch_namespace }} opensearch-0 -- curl -s http://localhost:9200/_cluster/health?pretty -u admin:admin)
         if [[ "echo $cluster_status | jq -r .status"  = "yellow" ]]; then
-          echo "::error::Opensearch cluster status is YELLOW. Check opensearch logs."
+          echo "::error::❌ Opensearch cluster status is YELLOW. Check opensearch logs."
+          echo "$cluster_status" | jq -r
+          exit 1
+        elif [[ "echo $cluster_status | jq -r .status"  = "red" ]]; then
+          echo "$cluster_status"
+          echo "::error::❌ Opensearch cluster status is RED. Check opensearch logs."
           echo "$cluster_status" | jq -r
           exit 1
         else
-          echo "$cluster_status"
+          echo "✅ Opensearch cluster status is GREEN."
         fi
       shell: bash
 
@@ -206,10 +211,10 @@ jobs:
           ready=$(echo "$pod" | jq -r '.status.conditions[] | select(.type == "Ready") | .status')
           scheduled=$(echo "$pod" | jq -r '.status.conditions[] | select(.type == "PodScheduled") | .status')
           if [[ "$ready" == "True" ]]; then
-            echo "::notice::✅ Logging operator is ready."
+            echo "✅ Logging operator is ready."
             break
           elif [[ "$ready" == "False" && "$phase" == "Running" ]]; then
-            echo "::notice::Logging operator is not ready yet. Retrying in ${{ env.delay }} seconds..."
+            echo "Logging operator is not ready yet. Retrying in ${{ env.delay }} seconds..."
             kubectl get pods -n ${{ env.namespace }}
             sleep ${{ env.delay }}
             ((attempt++))
@@ -217,24 +222,24 @@ jobs:
             images=$(echo "$pod" | jq -r '.status.containerStatuses[] | select(.state.waiting.reason == "ImagePullBackOff") | .image' 2>/dev/null)
             if [[ -n  "$images" ]]; then
               kubectl get pods -n ${{ env.namespace }}
-              echo -e "::error::ERROR: Some images cannot be pulled:\n$images"
+              echo -e "::error::❌ Some images cannot be pulled:\n$images"
               exit 1
             else
-              echo "::notice::Logging operator status: $phase. Retrying in ${{ env.delay }} seconds..."
+              echo "Logging operator status: $phase. Retrying in ${{ env.delay }} seconds..."
               kubectl get pods -n ${{ env.namespace }}
               sleep ${{ env.delay }}
               ((attempt++))
             fi
           else
             pod_events=$(kubectl events -n ${{ env.namespace }} --for pod/"$(echo $pod | jq -r '.metadata.name')")
-            echo "::error::Logging operator pod cannot start"
+            echo "::error::❌ Logging operator pod cannot start"
             echo -e "Events for logging operator pod:\n$pod_events"
             echo -e "Pods status in ${{ env.namespace }} namespace:\n$(kubectl get pods -n ${{ env.namespace }})"
             exit 1
           fi
         done
         if [[ "$ready" != "True" ]]; then
-          echo "::error::ERROR: Maximum attempts reached. Logging operator is not ready."
+          echo "::error::❌ Maximum attempts reached. Logging operator is not ready."
           exit 1
         fi
       shell: bash
@@ -253,7 +258,7 @@ jobs:
           ready=$(echo "$pod" | jq -r '.status.conditions[] | select(.type == "Ready") | .status')
           scheduled=$(echo "$pod" | jq -r '.status.conditions[] | select(.type == "PodScheduled") | .status')
           if [[ "$ready" == "True" ]]; then
-            echo "::notice::✅ Graylog is ready."
+            echo "✅ Graylog is ready."
             break
           elif [[ "$ready" == "False" && "$phase" == "Running" ]]; then
             echo "Graylog is not ready yet. Retrying in ${{ env.delay }} seconds..."
@@ -264,7 +269,7 @@ jobs:
             images=$(echo "$pod" | jq -r '.status.containerStatuses[] | select(.state.waiting.reason == "ImagePullBackOff") | .image' 2>/dev/null)
             if [[ -n  "$images" ]]; then
               kubectl get pods -n ${{ env.namespace }}
-              echo -e "::error::ERROR: Some images cannot be pulled:\n$images"
+              echo -e "::error::❌ Some images cannot be pulled:\n$images"
               exit 1
             else
               echo "Graylog status: $phase. Retrying in ${{ env.delay }} seconds..."
@@ -274,14 +279,14 @@ jobs:
             fi
           else
             pod_events=$(kubectl events -n ${{ env.namespace }} --for pod/"$(echo $pod | jq -r '.metadata.name')")
-            echo "::error::Graylog pod cannot start"
+            echo "::error::❌ Graylog pod cannot start"
             echo -e "Events for graylog pod:\n$pod_events"
             echo -e "Pods status in ${{ env.namespace }} namespace:\n$(kubectl get pods -n ${{ env.namespace }})"
             exit 1
           fi
         done
         if [[ "$ready" != "True" ]]; then
-          echo "::error::ERROR: Maximum attempts reached. Graylog is not ready."
+          echo "::error::❌ Maximum attempts reached. Graylog is not ready."
           exit 1
         fi
       shell: bash
@@ -298,7 +303,7 @@ jobs:
           ready=$(echo "$pod" | jq -r '.status.conditions[] | select(.type == "Ready") | .status')
           scheduled=$(echo "$pod" | jq -r '.status.conditions[] | select(.type == "PodScheduled") | .status')
           if [[ "$ready" == "True" ]]; then
-            echo "::notice::✅Integration tests pod is ready."
+            echo "✅Integration tests pod is ready."
             break
           elif [[ "$ready" == "False" && "$phase" == "Running" ]]; then
             echo "Integration tests pod is not ready yet. Retrying in ${{ env.delay }} seconds..."
@@ -308,7 +313,7 @@ jobs:
             images=$(echo "$pod" | jq -r '.status.containerStatuses[] | select(.state.waiting.reason == "ImagePullBackOff") | .image' 2>/dev/null)
             if [[ -n  "$images" ]]; then
               kubectl get pods -n ${{ env.namespace }}
-              echo -e "::error::ERROR: Some images cannot be pulled:\n$images"
+              echo -e "::error::❌ Some images cannot be pulled:\n$images"
               exit 1
             else
               echo "Integration tests pod status: $phase. Retrying in ${{ env.delay }} seconds..."
@@ -319,14 +324,14 @@ jobs:
           else
             kubectl get pods -n ${{ env.namespace }}
             pod_events=$(kubectl events -n ${{ env.namespace }} --for pod/"$(echo $pod | jq -r '.metadata.name')")
-            echo "::error::Integration tests pod cannot start"
+            echo "::error::❌ Integration tests pod cannot start"
             echo -e "Events for integration tests pod:\n$pod_events"
             echo -e "Pods status in ${{ env.namespace }} namespace:\n$(kubectl get pods -n ${{ env.namespace }})"
             exit 1
           fi
         done
         if [[ "$ready" != "True" ]]; then
-          echo "::error::ERROR: Maximum attempts reached. Integration tests pod is not ready."
+          echo "::error::❌ Maximum attempts reached. Integration tests pod is not ready."
           exit 1
         fi
       shell: bash
@@ -345,15 +350,16 @@ jobs:
               read total passed failed skipped <<< $(echo "$stats_line" | awk '{ gsub(",", "", $0); print $1, $3, $5, $7}')
               if [[ "$failed" == "1" ]]; then
                 warning=$(echo "$logs" | grep "yellow != green")
-                echo "::warning::Smoke test completed with 1 warning:"
+                echo "::warning::::group::⚠️Smoke test completed with 1 warning:"
                 echo -e "$warning\n==========================="
                 echo "Total: $total"
                 echo "Failed: $failed"
                 echo "Skipped: $skipped"
                 echo "Passed: $passed"
+                echo "::endgroup::"
                 exit 0
               else
-                "::error::ERROR: Smoke test has more than 1 failed steps"
+                "::error::❌ Smoke test has more than 1 failed steps"
                 exit 1
               fi
             else
@@ -363,10 +369,12 @@ jobs:
             fi
           elif [[ -n $(echo "$logs" | grep -E "Test Indexer Cluster Status.*PASS") ]]; then
             if [[ -n $(echo "$logs" | grep -E "Tests.*FAIL") ]]; then
-              echo "::error::ERROR: Some smoke test steps have failed. Check logs."
+              echo "::error::❌ Some smoke test steps have failed. Check logs."
               exit 1
             elif [[ -n $(echo "$logs" | grep -E "Tests.*PASS") ]]; then
-              echo "::notice::✅ Smoke test passed."
+              stats_line=$(echo "$logs" | grep -E '[0-9]+\ tests,\ [0-9]+\ passed,\ [0-9]+\ failed,\ [0-9]+\ skipped' | tail -n 1)
+              read total passed failed skipped <<< $(echo "$stats_line" | awk '{ gsub(",", "", $0); print $1, $3, $5, $7}')
+              echo "✅ Smoke test passed."
               exit 0
             else
               echo "Smoke test is not completed yet. Checking in ${{ env.delay }} seconds..."
@@ -379,7 +387,7 @@ jobs:
             ((attempt++))
           fi
         done
-        echo "::error::ERROR: Maximum attempts reached waiting for Integration test completion"
+        echo "::error::❌ Maximum attempts reached waiting for Integration test completion"
         exit 1
       shell: bash
 
