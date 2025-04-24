@@ -109,7 +109,8 @@ jobs:
             exit 1
           else
             echo "Opensearch status provisioner job status: $phase. Retrying in ${{ env.delay }} seconds..."
-            waiting_reason=$(echo "$(kubectl get pod opensearch-0 -n ${{ env.opensearch_namespace }} -o json)" | jq -r '.status.containerStatuses[].state.waiting.reason' 2>/dev/null)
+            kibectl get pods -n ${{ env.opensearch_namespace }}
+            waiting_reason=$(echo "$(kubectl get pod -l name=opensearch -n ${{ env.opensearch_namespace }} -o jsonpath='{.items[0]}')" | jq -r '.status.containerStatuses[].state.waiting.reason' 2>/dev/null)
             echo "$waiting_reason"
             sleep ${{ env.delay }}
             ((attempt++))
