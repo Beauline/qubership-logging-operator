@@ -148,8 +148,8 @@ jobs:
 
     - name: Create values for logging operator installation
       run: |
-        echo ${{ github.repository_owner }}
         TAG="${GITHUB_SHA:0:11}"
+        echo "ghcr.io/${{ github.repository_owner }}/qubership-logging-operator:$TAG"
         cat <<EOF > logging_values.yaml
         skipMetricsService: false
         containerRuntimeType: containerd
