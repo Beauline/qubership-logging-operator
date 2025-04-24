@@ -18,7 +18,8 @@ env:
   delay: 10
 
 jobs:
-  Run-Integration-Tests:
+  integration_tests:
+    name: Run Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -97,7 +98,7 @@ jobs:
       run: |
         echo "Checking status of opensearch-status-provisioner..."
         attempt=1
-        max_attempts=100
+        max_attempts=${{ env.max_attempts }}
         while [[ $attempt -le $max_attempts ]]; do
           echo "Attempt $attempt/$max_attempts: Checking opensearch-status-provisioner pod status..."
           phase=$(kubectl get pod -l name=opensearch-status-provisioner -n ${{ env.opensearch_namespace }} -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
@@ -136,7 +137,6 @@ jobs:
       uses: kachick/wait-other-jobs@v3.8.0
       timeout-minutes: 10
       with:
-        # github-token: ${{ secrets.GHCR_TOKEN }}
         wait-list: |
           [
             {
@@ -341,7 +341,7 @@ jobs:
               read total passed failed skipped <<< $(echo "$stats_line" | awk '{ gsub(",", "", $0); print $1, $3, $5, $7}')
               if [[ "$failed" == "1" ]]; then
                 warning=$(echo "$logs" | grep "yellow != green")
-                echo "Smoke test completed with 1 warning:"
+                echo "Smoke test completed with 1 ::warning:: warning:"
                 echo -e "$warning\n==========================="
                 echo "Total: $total"
                 echo "Failed: $failed"
@@ -445,4 +445,4 @@ jobs:
 
     - name: Cleanup
       run: |
-        kind delete cluster --name ${{ env.kind_name }}
+        kind delete cluster
