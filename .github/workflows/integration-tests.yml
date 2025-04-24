@@ -136,6 +136,7 @@ jobs:
       uses: kachick/wait-other-jobs@v3.8.0
       timeout-minutes: 10
       with:
+        github-token: {{ secrets.GHCR_TOKEN }}
         wait-list: |
           [
             {
@@ -143,7 +144,7 @@ jobs:
               "jobName": "Build Docker with Matrix Strategy"
             }
           ]
-          
+        
     - name: Create Values For Logging Operator Installation
       run: |
         TAG="${GITHUB_SHA:0:11}"
