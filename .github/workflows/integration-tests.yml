@@ -141,7 +141,8 @@ jobs:
           [
             {
               "workflowFile": "docker-dev.yml",
-              "jobName": "completion"
+              "jobName": "build",
+              "jobMatchMode": "prefix"
             }
           ]
 
