@@ -30,6 +30,7 @@ jobs:
 
     - name: Set up kind
       run: |
+        echo "::warning::Test cluster will be deleted after tests are completed"
         curl -sLo ./kind https://kind.sigs.k8s.io/dl/${{ env.kind_version }}/kind-linux-amd64
         chmod +x ./kind
         sudo mv ./kind /usr/local/bin/
@@ -341,7 +342,7 @@ jobs:
               read total passed failed skipped <<< $(echo "$stats_line" | awk '{ gsub(",", "", $0); print $1, $3, $5, $7}')
               if [[ "$failed" == "1" ]]; then
                 warning=$(echo "$logs" | grep "yellow != green")
-                echo "Smoke test completed with 1 ::warning:: warning:"
+                echo "::warning::Smoke test completed with 1 warning:"
                 echo -e "$warning\n==========================="
                 echo "Total: $total"
                 echo "Failed: $failed"
@@ -349,7 +350,7 @@ jobs:
                 echo "Passed: $passed"
                 exit 0
               else
-                "ERROR: Smoke test has more than 1 failed steps"
+                "::error:: ERROR: Smoke test has more than 1 failed steps"
                 exit 1
               fi
             else
