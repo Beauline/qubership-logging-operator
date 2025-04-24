@@ -149,7 +149,7 @@ jobs:
     - name: Create values for logging operator installation
       run: |
         TAG="${GITHUB_SHA:0:11}"
-        REPOSITORY_OWNER="${{ github.repository_owner }}"
+        REPOSITORY_OWNER="$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')"
         cat <<EOF > logging_values.yaml
         skipMetricsService: false
         containerRuntimeType: containerd
