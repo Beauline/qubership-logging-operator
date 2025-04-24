@@ -97,23 +97,23 @@ jobs:
       run: |
         echo "Checking status of opensearch-status-provisioner..."
         attempt=1
-        max_attempts=${{ env.max_attempts }}
-        while [[ $attempt -le 100 ]]; do
-          echo "Attempt $attempt/100: Checking opensearch-status-provisioner pod status..."
+        max_attempts=100
+        while [[ $attempt -le $max_attempts ]]; do
+          echo "Attempt $attempt/$max_attempts: Checking opensearch-status-provisioner pod status..."
           phase=$(kubectl get pod -l name=opensearch-status-provisioner -n ${{ env.opensearch_namespace }} -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
           if [[ "$phase" == "Succeeded" ]]; then
-              echo "Opensearch status provisioner job has succeeded."
-              break
-            elif [[ "$phase" == "Failed" || "$phase" == "Error" ]]; then
-              echo "Opensearch status provisioner job failed with status: $phase"
-              exit 1
-            else
-              echo "Opensearch status provisioner job status: $phase. Retrying in ${{ env.delay }} seconds..."
-              sleep ${{ env.delay }}
-              ((attempt++))
-            fi
+            echo "Opensearch status provisioner job has succeeded."
+            break
+          elif [[ "$phase" == "Failed" || "$phase" == "Error" ]]; then
+            echo "Opensearch status provisioner job failed with status: $phase"
+            exit 1
+          else
+            echo "Opensearch status provisioner job status: $phase. Retrying in ${{ env.delay }} seconds..."
+            sleep ${{ env.delay }}
+            ((attempt++))
             waiting_reason=$(echo "$(kubectl get pod opensearch-0 -n ${{ env.opensearch_namespace }} -o json)" | jq -r '.status.containerStatuses[].state.waiting.reason)' 2>/dev/null)
             echo "$waiting_reason"
+          fi
         done
         if [[ "$phase" != "Succeeded" ]]; then
           echo "ERROR: Maximum attempts reached. Opensearch status provisioner job has not succeeded."
