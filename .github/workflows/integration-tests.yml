@@ -136,12 +136,12 @@ jobs:
       uses: kachick/wait-other-jobs@v3.8.0
       timeout-minutes: 10
       with:
-        github-token: ${{ secrets.GHCR_TOKEN }}
+        # github-token: ${{ secrets.GHCR_TOKEN }}
         wait-list: |
           [
             {
               "workflowFile": "docker-dev.yml",
-              "jobName": "Build Docker with Matrix Strategy"
+              "jobName": "completion"
             }
           ]
 
