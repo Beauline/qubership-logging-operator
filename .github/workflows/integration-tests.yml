@@ -140,20 +140,10 @@ jobs:
           [
             {
               "workflowFile": "docker-dev.yml",
-              "jobName": "Build Docker Images"
+              "jobName": "Build Docker with Matrix Strategy"
             }
           ]
-    - name: Wait for Dev Docker Build completion
-      uses: kachick/wait-other-jobs@v3.8.0
-      timeout-minutes: 10
-      with:
-        wait-list: |
-          [
-            {
-              "workflowFile": "docker-dev.yml",
-              "jobName": "Build Docker Images"
-            }
-          ]
+          
     - name: Create Values For Logging Operator Installation
       run: |
         TAG="${GITHUB_SHA:0:11}"
