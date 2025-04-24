@@ -152,7 +152,7 @@ jobs:
         cat <<EOF > logging_values.yaml
         skipMetricsService: false
         containerRuntimeType: containerd
-        operatorImage: ghcr.io/{{ github.repository_owner }}/qubership-logging-operator:$TAG
+        operatorImage: ghcr.io/${{ github.repository_owner }}/qubership-logging-operator:$TAG
         graylog:
           install: true
           mongoStorageClassName: standard
@@ -175,7 +175,7 @@ jobs:
         integrationTests:
           install: true
           tags: smoke
-          image: ghcr.io/{{ github.repository_owner }}/qubership-logging-integration-tests:$TAG
+          image: ghcr.io/${{ github.repository_owner }}/qubership-logging-integration-tests:$TAG
           externalGraylogServer: "false"
           graylogHost: graylog-service
           graylogPort: 9000
@@ -208,15 +208,18 @@ jobs:
             break
           elif [[ "$ready" == "False" && "$phase" == "Running" ]]; then
             echo "Logging operator is not ready yet. Retrying in ${{ env.delay }} seconds..."
+            kubectl get pods -n {{ env.namespace }}
             sleep ${{ env.delay }}
             ((attempt++))
           elif [[ "$phase" == "Pending" && "$scheduled" == "True" ]]; then
             images=$(echo "$pod" | jq -r '.status.containerStatuses[] | select(.state.waiting.reason == "ImagePullBackOff") | .image' 2>/dev/null)
             if [[ -n  "$images" ]]; then
+              kubectl get pods -n {{ env.namespace }}
               echo -e "ERROR: Some images cannot be pulled:\n$images"
               exit 1
             else
               echo "Logging operator status: $phase. Retrying in ${{ env.delay }} seconds..."
+              kubectl get pods -n {{ env.namespace }}
               sleep ${{ env.delay }}
               ((attempt++))
             fi
@@ -251,15 +254,18 @@ jobs:
             break
           elif [[ "$ready" == "False" && "$phase" == "Running" ]]; then
             echo "Graylog is not ready yet. Retrying in ${{ env.delay }} seconds..."
+            kubectl get pods -n {{ env.namespace }}
             sleep ${{ env.delay }}
             ((attempt++))
           elif [[ "$phase" == "Pending" && "$scheduled" == "True" ]]; then
             images=$(echo "$pod" | jq -r '.status.containerStatuses[] | select(.state.waiting.reason == "ImagePullBackOff") | .image' 2>/dev/null)
             if [[ -n  "$images" ]]; then
+              kubectl get pods -n {{ env.namespace }}
               echo -e "ERROR: Some images cannot be pulled:\n$images"
               exit 1
             else
               echo "Graylog status: $phase. Retrying in ${{ env.delay }} seconds..."
+              kubectl get pods -n {{ env.namespace }}
               sleep ${{ env.delay }}
               ((attempt++))
             fi
