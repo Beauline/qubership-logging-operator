@@ -52,7 +52,7 @@ jobs:
         file: ./qubership-logging-operator/Dockerfile
         platforms: linux/amd64
         push: false
-        tags: ghcr.io/${{ REPOSITORY_OWNER }}/qubership-logging-operator:${{ TAG }}
+        tags: ghcr.io/${{ env.REPOSITORY_OWNER }}/qubership-logging-operator:${{ env.TAG }}
     - name: Build qubership-logging-integration-tests
       uses: docker/build-push-action@v6
       with:
@@ -61,7 +61,7 @@ jobs:
         file: ./qubership-logging-operator/Dockerfile
         platforms: linux/amd64
         push: false
-        tags: ghcr.io/${{ REPOSITORY_OWNER }}/qubership-logging-integration-tests:${{ TAG }}
+        tags: ghcr.io/${{ env.REPOSITORY_OWNER }}/qubership-logging-integration-tests:${{ env.TAG }}
 
     - name: Install helm
       run: |
