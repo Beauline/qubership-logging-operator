@@ -13,6 +13,7 @@ on:
 env:
   kind_version: v0.27.0
   opensearch_namespace: opensearch
+  opensearch_version: release-2025.2-1.14.4
   namespace: logging
   max_attempts: 50
   delay: 10
@@ -83,14 +84,14 @@ jobs:
       uses: actions/checkout@v4
       with:
         repository: Netcracker/qubership-opensearch
-        ref: release-2025.2-1.14.4
+        ref: ${{ env.opensearch_version }}
         path: qubership-opensearch
 
     - name: Create values.yaml for opensearch
       run: |
         cat <<EOF > opensearch_values.yaml
         operator:
-          dockerImage: ghcr.io/netcracker/qubership-opensearch-operator:release-2025.2-1.14.4
+          dockerImage: ghcr.io/netcracker/qubership-opensearch-operator:${{ env.opensearch_version }}
         dashboards:
           enabled: false
         opensearch:
@@ -154,22 +155,31 @@ jobs:
       shell: bash
 
     - name: Check opensearch cluster health
+      id: check_opensearch_health
       run: |
         cluster_status=$(kubectl exec -n ${{ env.opensearch_namespace }} opensearch-0 -- curl -s http://localhost:9200/_cluster/health?pretty -u admin:admin)
         if [[ "echo $cluster_status | jq -r .status"  = "yellow" ]]; then
           echo "::error::❌ Opensearch cluster status is YELLOW. Check opensearch logs."
-          echo "$cluster_status" | jq -r
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "$cluster_status" | tee >(jq -r | sed 's/^/details=/' >> $GITHUB_OUTPUT) && echo -e "Cluster status:\n$cluster_status"
           exit 1
         elif [[ "echo $cluster_status | jq -r .status"  = "red" ]]; then
-          echo "$cluster_status"
           echo "::error::❌ Opensearch cluster status is RED. Check opensearch logs."
-          echo "$cluster_status" | jq -r
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "$cluster_status" | tee >(jq -r | sed 's/^/details=/' >> $GITHUB_OUTPUT) && echo -e "Cluster status:\n$cluster_status"
           exit 1
         else
           echo "✅ Opensearch cluster status is GREEN."
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "$cluster_status" | tee >(jq -r | sed 's/^/details=/' >> $GITHUB_OUTPUT) && echo -e "Cluster status:\n$cluster_status"
         fi
       shell: bash
-
+    - name: Generate Status Summary for Opensearch
+      run: |
+        echo "### Opensearch installation" >> $GITHUB_STEP_SUMMARY
+        echo "| Step | Status | Details |" >> $GITHUB_STEP_SUMMARY
+        echo "|------|--------|---------|" >> $GITHUB_STEP_SUMMARY
+        echo -e "| Check opensearch cluster health | $({{ steps.check_opensearch_health.outputs.status }}) | ${{ steps.check_opensearch_health.outputs.details }} |\nOpensearch version: ${{ env.opensearch_version }}" >> $GITHUB_STEP_SUMMARY
     # - name: Wait for Dev Docker Build completion
     #   uses: kachick/wait-other-jobs@v3.8.0
     #   timeout-minutes: 10
