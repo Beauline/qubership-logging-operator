@@ -57,8 +57,8 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         no-cache: true
-        context: ./qubership-logging-operator
-        file: ./qubership-logging-operator/Dockerfile
+        context: ./qubership-logging-operator/test/robot-tests
+        file: ./qubership-logging-operator/test/robot-tests/Dockerfile
         platforms: linux/amd64
         push: false
         tags: ghcr.io/${{ env.REPOSITORY_OWNER }}/qubership-logging-integration-tests:${{ env.TAG }}
