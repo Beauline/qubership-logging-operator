@@ -17,9 +17,9 @@ on:
         type: boolean
         default: false
         description: 'Dry run'
-  push:
-    branches:
-    - '**'
+  # push:
+  #   branches:
+  #   - '**'
 permissions:
   contents: read
   packages: write
@@ -95,7 +95,7 @@ jobs:
           echo "tags: ${TAGS}" >> $GITHUB_STEP_SUMMARY
           echo "github.head_ref = ${{ github.head_ref }}"
   build:
-    name: "Build Docker Images"
+    name: "Build Docker Images And Run Integration Tests"
     needs: [load_config, perform-version]
     runs-on: ubuntu-latest
     strategy:
@@ -114,3 +114,4 @@ jobs:
           tags: ${{ needs.perform-version.outputs.tags }}
         env:
           GITHUB_TOKEN: ${{ secrets.GHCR_TOKEN }}
+
