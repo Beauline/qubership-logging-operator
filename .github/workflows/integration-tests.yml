@@ -30,7 +30,6 @@ jobs:
 
     - name: Set up kind
       run: |
-        echo "::warning::⚠️Test cluster will be deleted after tests are completed"
         curl -sLo ./kind https://kind.sigs.k8s.io/dl/${{ env.kind_version }}/kind-linux-amd64
         chmod +x ./kind
         sudo mv ./kind /usr/local/bin/
