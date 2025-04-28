@@ -62,6 +62,10 @@ jobs:
         platforms: linux/amd64
         push: false
         tags: ghcr.io/${{ env.REPOSITORY_OWNER }}/qubership-logging-integration-tests:${{ env.TAG }}
+    - name: Load docker images in kind cluster
+      run: |
+        kind load docker-image ghcr.io/${{ env.REPOSITORY_OWNER }}/qubership-logging-operator:${{ env.TAG }} --name kind
+        kind load docker-image ghcr.io/${{ env.REPOSITORY_OWNER }}/qubership-logging-integration-tests:${{ env.TAG }} --name kind
 
     - name: Install helm
       run: |
