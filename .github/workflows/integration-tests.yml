@@ -376,6 +376,7 @@ jobs:
       shell: bash
 
     - name: Check integration tests results
+      id: check_integration_tests
       run: |
         echo "Checking integration tests results..."
         attempt=1
@@ -391,14 +392,21 @@ jobs:
                 warning=$(echo "$logs" | grep "yellow != green")
                 echo "::group::⚠️Smoke test completed with 1 warning:"
                 echo -e "$warning\n==========================="
-                echo "Total: $total"
-                echo "Failed: $failed"
-                echo "Skipped: $skipped"
-                echo "Passed: $passed"
+                echo -e "Total: $total\nFailed: $failed\nSkipped: $skipped\nPassed: $passed"
                 echo "::endgroup::"
+                echo "status=⚠️warning" >> $GITHUB_OUTPUT
+                if [[ -n "$warning" ]]; then
+                  echo "warning=$warning" >> $GITHUB_OUTPUT
+                fi
+                echo "total=$total" >> $GITHUB_OUTPUT
+                echo "failed=$failed" >> $GITHUB_OUTPUT
+                echo "skipped=$skipped" >> $GITHUB_OUTPUT
+                echo "passed=$passed" >> $GITHUB_OUTPUT
                 exit 0
               else
                 "::error::❌ Smoke test has more than 1 failed steps"
+                echo "status=❌failed" >> $GITHUB_OUTPUT
+                echo "details=Check logs in uploaded artifacts" >> $GITHUB_OUTPUT
                 exit 1
               fi
             else
@@ -409,11 +417,18 @@ jobs:
           elif [[ -n $(echo "$logs" | grep -E "Test Indexer Cluster Status.*PASS") ]]; then
             if [[ -n $(echo "$logs" | grep -E "Tests.*FAIL") ]]; then
               echo "::error::❌ Some smoke test steps have failed. Check logs."
+              echo "status=❌failed" >> $GITHUB_OUTPUT
+              echo "details=Check logs in uploaded artifacts" >> $GITHUB_OUTPUT
               exit 1
             elif [[ -n $(echo "$logs" | grep -E "Tests.*PASS") ]]; then
               stats_line=$(echo "$logs" | grep -E '[0-9]+\ tests,\ [0-9]+\ passed,\ [0-9]+\ failed,\ [0-9]+\ skipped' | tail -n 1)
               read total passed failed skipped <<< $(echo "$stats_line" | awk '{ gsub(",", "", $0); print $1, $3, $5, $7}')
               echo "✅ Smoke test passed."
+              echo "status=✅success" >> $GITHUB_OUTPUT
+              echo "total=$total" >> $GITHUB_OUTPUT
+              echo "failed=$failed" >> $GITHUB_OUTPUT
+              echo "skipped=$skipped" >> $GITHUB_OUTPUT
+              echo "passed=$passed" >> $GITHUB_OUTPUT
               exit 0
             else
               echo "Smoke test is not completed yet. Checking in ${{ env.delay }} seconds..."
@@ -427,14 +442,19 @@ jobs:
           fi
         done
         echo "::error::❌ Maximum attempts reached waiting for Integration test completion"
+        echo "status=❌failed" >> $GITHUB_OUTPUT
+        echo "details=Check logs in uploaded artifacts" >> $GITHUB_OUTPUT
         exit 1
       shell: bash
 
     - name: Save opensearch artifacts
       if: always()
+      id: 
       run: |
         mkdir -p "artifacts/${{ env.opensearch_namespace }}"
-        kubectl get pods -n "${{ env.opensearch_namespace }}" > artifacts/${{ env.opensearch_namespace }}/pods.txt
+        pods=$(kubectl get pods -n "${{ env.opensearch_namespace }} -o wide)" 
+        echo "$pods" > artifacts/${{ env.opensearch_namespace }}/pods.txt
+        {echo 'opensearch_pods<<EOF'; echo "$pods";echo 'EOF'} >> $GITHUB_OUTPUT
         kubectl get events -n "${{ env.opensearch_namespace }}" --sort-by=.metadata.creationTimestamp > artifacts/${{ env.opensearch_namespace }}/events.txt
         kubectl get pods -n "${{ env.opensearch_namespace }}" -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.spec.containers[*].name}{"\n"}{end}' | while read -r pod containers; do
           for container in $containers; do
@@ -454,10 +474,13 @@ jobs:
       shell: bash
 
     - name: Save logging artifacts
+      id: logging_artifacts
       if: always()
       run: |
         mkdir -p "artifacts/${{ env.namespace }}"
-        kubectl get pods -n "${{ env.namespace }}" > artifacts/${{ env.namespace }}/pods.txt
+        pods=$(kubectl get pods -n ${{ env.namespace }}) > artifacts/${{ env.namespace }}/pods.txt
+        echo "$pods" > artifacts/${{ env.namespace }}/pods.txt
+        {echo 'logging_pods<<EOF'; echo "$pods";echo 'EOF'} >> $GITHUB_OUTPUT
         kubectl get events -n "${{ env.namespace }}" --sort-by=.metadata.creationTimestamp > artifacts/${{ env.namespace }}/events.txt
         kubectl get pods -n "${{ env.namespace }}" -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.spec.containers[*].name}{"\n"}{end}' | while read -r pod containers; do
           for container in $containers; do
@@ -498,22 +521,35 @@ jobs:
       run: |
         kind delete cluster
 
-  report:
-    name: Generate Summary
-    if: always()
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: [integration_tests]
-    steps:
-    - name: Generate Summary
+    - name: Generate Status Summary
+      if: always()
       run: |
-        echo "# Integration Tests Report" > $GITHUB_STEP_SUMMARY
-        echo "Integration Tests Overall Status: ${{ needs.integration_tests.result }}" >> $GITHUB_STEP_SUMMARY
         echo "## Install opensearch" >> $GITHUB_STEP_SUMMARY
-        echo "Check opensearch cluster health: ${{ needs.integration_tests.steps.check_opensearch_health.outputs.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "Check opensearch cluster health: ${{ steps.check_opensearch_health.outputs.status || "❌failure"}}" >> $GITHUB_STEP_SUMMARY
         echo -e "Opensearch version: ${{ env.opensearch_version }}" >> $GITHUB_STEP_SUMMARY
         echo "Cluster status:" >> $GITHUB_STEP_SUMMARY
         echo '```json' >> $GITHUB_STEP_SUMMARY
-        echo '${{ needs.integration_tests.steps.check_opensearch_health.outputs.cluster_status }}' | jq . >> $GITHUB_STEP_SUMMARY
+        echo '${{ steps.check_opensearch_health.outputs.cluster_status }}' | jq . || echo "unknown" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
+        echo 'Pods running in opensearch namespace:' >> $GITHUB_STEP_SUMMARY
+        echo '```sh' >> $GITHUB_STEP_SUMMARY
+        echo '${{ steps.opensearch_artifacts.outputs.opensearch_pods || "unknown" }}' >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        
+        echo "## Install logging operator" >> $GITHUB_STEP_SUMMARY
+        echo "Check graylog status: ${{ steps.check_graylog.outputs.status || "❌failure"}}" >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.check_graylog.outputs.details || "unknown" }}" >> $GITHUB_STEP_SUMMARY
+        echo 'Pods running in logging namespace:' >> $GITHUB_STEP_SUMMARY
+        echo '```sh' >> $GITHUB_STEP_SUMMARY
+        echo '${{ steps.logging_artifacts.outputs.logging_pods || "unknown" }}' >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+
+        echo "## Check integration tests results" >> $GITHUB_STEP_SUMMARY
+        echo "Check integration tests status: ${{ steps.check_integration_tests.outputs.status || "unknown"}}" >> $GITHUB_STEP_SUMMARY
+        echo '${{ steps.check_integration_tests.outputs.details || "" }}' >> $GITHUB_STEP_SUMMARY
+        echo "Total tests: ${{ steps.check_integration_tests.outputs.total || "unknown"}}" >> $GITHUB_STEP_SUMMARY
+        echo "Failed tests: ${{ steps.check_integration_tests.outputs.failed || "unknown"}}" >> $GITHUB_STEP_SUMMARY
+        echo "Skipped tests: ${{ steps.check_integration_tests.outputs.skipped || "unknown"}}" >> $GITHUB_STEP_SUMMARY
+        echo "Passed tests: ${{ steps.check_integration_tests.outputs.passed || "unknown"}}" >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.check_integration_tests.outputs.warning || "" }}" >> $GITHUB_STEP_SUMMARY
         
