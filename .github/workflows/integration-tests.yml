@@ -403,11 +403,11 @@ jobs:
                 echo "skipped=$skipped" >> $GITHUB_OUTPUT
                 echo "passed=$passed" >> $GITHUB_OUTPUT
                 test_results=$(echo "$logs" | awk -v RS='\r?\n' '/^==============================================================================$/ && !found {found=1; next} found && /^Output:/ {exit} found')
-                cat <<EOF >> $GITHUB_OUTPUT
-                test_results<<END
-                $test_results
-                END
-                EOF
+        cat <<'EOF' >> $GITHUB_OUTPUT
+        test_results<<END
+        $test_results
+        END
+        EOF
                 exit 0
               else
                 "::error::❌ Smoke test has more than 1 failed steps"
