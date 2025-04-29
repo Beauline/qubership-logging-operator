@@ -546,7 +546,7 @@ jobs:
 
         echo "## Check integration tests results" >> $GITHUB_STEP_SUMMARY
         echo "Check integration tests status: ${{ steps.check_integration_tests.outputs.status || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
-        echo '${{ steps.check_integration_tests.outputs.details || "" }}' >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.check_integration_tests.outputs.details || '' }}" >> $GITHUB_STEP_SUMMARY
         echo "Total tests: ${{ steps.check_integration_tests.outputs.total || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo "Failed tests: ${{ steps.check_integration_tests.outputs.failed || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo "Skipped tests: ${{ steps.check_integration_tests.outputs.skipped || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
