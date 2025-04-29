@@ -525,31 +525,31 @@ jobs:
       if: always()
       run: |
         echo "## Install opensearch" >> $GITHUB_STEP_SUMMARY
-        echo "Check opensearch cluster health: ${{ steps.check_opensearch_health.outputs.status || "unknown"}}" >> $GITHUB_STEP_SUMMARY
+        echo "Check opensearch cluster health: ${{ steps.check_opensearch_health.outputs.status || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo -e "Opensearch version: ${{ env.opensearch_version }}" >> $GITHUB_STEP_SUMMARY
         echo "Cluster status:" >> $GITHUB_STEP_SUMMARY
         echo '```json' >> $GITHUB_STEP_SUMMARY
-        echo '${{ steps.check_opensearch_health.outputs.cluster_status }}' | jq . || echo "unknown" >> $GITHUB_STEP_SUMMARY
+        echo '${{ steps.check_opensearch_health.outputs.cluster_status }}' | jq . || echo 'unknown' >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
         echo 'Pods running in opensearch namespace:' >> $GITHUB_STEP_SUMMARY
         echo '```sh' >> $GITHUB_STEP_SUMMARY
-        echo '${{ steps.opensearch_artifacts.outputs.opensearch_pods || "unknown" }}' >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.opensearch_artifacts.outputs.opensearch_pods || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
         
         echo "## Install logging operator" >> $GITHUB_STEP_SUMMARY
-        echo "Check graylog status: ${{ steps.check_graylog.outputs.status || "unknown"}}" >> $GITHUB_STEP_SUMMARY
-        echo "${{ steps.check_graylog.outputs.details || "unknown" }}" >> $GITHUB_STEP_SUMMARY
+        echo "Check graylog status: ${{ steps.check_graylog.outputs.status || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.check_graylog.outputs.details || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo 'Pods running in logging namespace:' >> $GITHUB_STEP_SUMMARY
         echo '```sh' >> $GITHUB_STEP_SUMMARY
-        echo '${{ steps.logging_artifacts.outputs.logging_pods || "unknown" }}' >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.logging_artifacts.outputs.logging_pods || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
 
         echo "## Check integration tests results" >> $GITHUB_STEP_SUMMARY
-        echo "Check integration tests status: ${{ steps.check_integration_tests.outputs.status || "unknown"}}" >> $GITHUB_STEP_SUMMARY
+        echo "Check integration tests status: ${{ steps.check_integration_tests.outputs.status || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo '${{ steps.check_integration_tests.outputs.details || "" }}' >> $GITHUB_STEP_SUMMARY
-        echo "Total tests: ${{ steps.check_integration_tests.outputs.total || "unknown"}}" >> $GITHUB_STEP_SUMMARY
-        echo "Failed tests: ${{ steps.check_integration_tests.outputs.failed || "unknown"}}" >> $GITHUB_STEP_SUMMARY
-        echo "Skipped tests: ${{ steps.check_integration_tests.outputs.skipped || "unknown"}}" >> $GITHUB_STEP_SUMMARY
-        echo "Passed tests: ${{ steps.check_integration_tests.outputs.passed || "unknown"}}" >> $GITHUB_STEP_SUMMARY
-        echo "${{ steps.check_integration_tests.outputs.warning || "" }}" >> $GITHUB_STEP_SUMMARY
+        echo "Total tests: ${{ steps.check_integration_tests.outputs.total || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "Failed tests: ${{ steps.check_integration_tests.outputs.failed || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "Skipped tests: ${{ steps.check_integration_tests.outputs.skipped || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "Passed tests: ${{ steps.check_integration_tests.outputs.passed || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.check_integration_tests.outputs.warning || '' }}" >> $GITHUB_STEP_SUMMARY
         
