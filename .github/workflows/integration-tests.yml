@@ -452,7 +452,7 @@ jobs:
       id: opensearch_artifacts
       run: |
         mkdir -p "artifacts/${{ env.opensearch_namespace }}"
-        pods=$(kubectl get pods -n "${{ env.opensearch_namespace }} -o wide)" 
+        pods=$(kubectl get pods -n ${{ env.opensearch_namespace }} -o wide)
         echo "$pods" > artifacts/${{ env.opensearch_namespace }}/pods.txt
         {echo 'opensearch_pods<<EOF'; echo "$pods";echo 'EOF'} >> $GITHUB_OUTPUT
         kubectl get events -n "${{ env.opensearch_namespace }}" --sort-by=.metadata.creationTimestamp > artifacts/${{ env.opensearch_namespace }}/events.txt
@@ -478,7 +478,7 @@ jobs:
       if: always()
       run: |
         mkdir -p "artifacts/${{ env.namespace }}"
-        pods=$(kubectl get pods -n ${{ env.namespace }}) > artifacts/${{ env.namespace }}/pods.txt
+        pods=$(kubectl get pods -n ${{ env.namespace }} -o wide)
         echo "$pods" > artifacts/${{ env.namespace }}/pods.txt
         {echo 'logging_pods<<EOF'; echo "$pods";echo 'EOF'} >> $GITHUB_OUTPUT
         kubectl get events -n "${{ env.namespace }}" --sort-by=.metadata.creationTimestamp > artifacts/${{ env.namespace }}/events.txt
