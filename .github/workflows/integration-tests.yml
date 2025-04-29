@@ -182,9 +182,11 @@ jobs:
         echo -e "| Check opensearch cluster health | ${{ steps.check_opensearch_health.outputs.status }} |\n\n"
         echo -e "Opensearch version: ${{ env.opensearch_version }}" >> $GITHUB_STEP_SUMMARY
         echo "Cluster status:" >> $GITHUB_STEP_SUMMARY
-        echo "```json" >> $GITHUB_STEP_SUMMARY
+        echo '```json' >> $GITHUB_STEP_SUMMARY
 
         echo '${{ steps.check_opensearch_health.outputs.cluster_status }}' | jq . >> $GITHUB_STEP_SUMMARY
+        echo '```'
+
     # - name: Wait for Dev Docker Build completion
     #   uses: kachick/wait-other-jobs@v3.8.0
     #   timeout-minutes: 10
@@ -197,6 +199,7 @@ jobs:
     #           "jobMatchMode": "prefix"
     #         }
     #       ]
+
     - name: Create values for logging operator installation
       run: |
         cat <<EOF > logging_values.yaml
