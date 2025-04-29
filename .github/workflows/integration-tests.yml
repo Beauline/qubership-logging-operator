@@ -174,16 +174,6 @@ jobs:
           echo "cluster_status=$(echo $cluster_status | jq -c )" >> $GITHUB_OUTPUT && echo -e "Cluster status:\n$cluster_status"
         fi
       shell: bash
-    - name: Generate Status Summary for Opensearch
-      run: |
-        echo "## Install opensearch" >> $GITHUB_STEP_SUMMARY
-        echo "Check opensearch cluster health: ${{ steps.check_opensearch_health.outputs.status }}" >> $GITHUB_STEP_SUMMARY
-        echo -e "Opensearch version: ${{ env.opensearch_version }}" >> $GITHUB_STEP_SUMMARY
-        echo "Cluster status:" >> $GITHUB_STEP_SUMMARY
-        echo '```json' >> $GITHUB_STEP_SUMMARY
-
-        echo '${{ steps.check_opensearch_health.outputs.cluster_status }}' | jq . >> $GITHUB_STEP_SUMMARY
-        echo '```' >> $GITHUB_STEP_SUMMARY
 
     # - name: Wait for Dev Docker Build completion
     #   uses: kachick/wait-other-jobs@v3.8.0
@@ -507,3 +497,23 @@ jobs:
     - name: Cleanup
       run: |
         kind delete cluster
+
+  report:
+    name: Generate Summary
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [integration_tests]
+    steps:
+    - name: Generate Summary
+      run: |
+        echo "# Integration Tests Report" > $GITHUB_STEP_SUMMARY
+        echo "Integration Tests Overall Status: ${{ needs.integration_tests.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "## Install opensearch" >> $GITHUB_STEP_SUMMARY
+        echo "Check opensearch cluster health: ${{ needs.integration_tests.steps.check_opensearch_health.outputs.status }}" >> $GITHUB_STEP_SUMMARY
+        echo -e "Opensearch version: ${{ env.opensearch_version }}" >> $GITHUB_STEP_SUMMARY
+        echo "Cluster status:" >> $GITHUB_STEP_SUMMARY
+        echo '```json' >> $GITHUB_STEP_SUMMARY
+        echo '${{ needs.integration_tests.steps.check_opensearch_health.outputs.cluster_status }}' | jq . >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        
