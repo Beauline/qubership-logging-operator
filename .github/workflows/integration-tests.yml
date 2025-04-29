@@ -402,6 +402,12 @@ jobs:
                 echo "failed=$failed" >> $GITHUB_OUTPUT
                 echo "skipped=$skipped" >> $GITHUB_OUTPUT
                 echo "passed=$passed" >> $GITHUB_OUTPUT
+                test_results=$(echo "$logs" | awk -v RS='\r?\n' '/^==============================================================================$/ && !found {found=1; next} found && /^Output:/ {exit} found')
+                cat <<EOF >> $GITHUB_OUTPUT
+                test_results<<END
+                $test_results
+                END
+                EOF
                 exit 0
               else
                 "::error::❌ Smoke test has more than 1 failed steps"
@@ -563,4 +569,8 @@ jobs:
         echo "Skipped tests: ${{ steps.check_integration_tests.outputs.skipped || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo "Passed tests: ${{ steps.check_integration_tests.outputs.passed || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo "${{ steps.check_integration_tests.outputs.warning || '' }}" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        echo "details:" >> $GITHUB_STEP_SUMMARY
+        echo '```sh' >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.check_integration_tests.outputs.test_results || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
