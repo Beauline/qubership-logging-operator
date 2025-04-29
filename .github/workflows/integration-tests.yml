@@ -454,7 +454,7 @@ jobs:
         mkdir -p "artifacts/${{ env.opensearch_namespace }}"
         pods=$(kubectl get pods -n ${{ env.opensearch_namespace }} -o wide)
         echo "$pods" > artifacts/${{ env.opensearch_namespace }}/pods.txt
-        PODS_TABLE=$(kubectl get pods -n {{ env.opensearch_namespace }} -o wide)    
+        PODS_TABLE=$(kubectl get pods -n ${{ env.opensearch_namespace }} -o wide)    
         cat <<EOF >> $GITHUB_OUTPUT
         opensearch_pods<<END
         $PODS_TABLE
@@ -485,7 +485,7 @@ jobs:
         mkdir -p "artifacts/${{ env.namespace }}"
         pods=$(kubectl get pods -n ${{ env.namespace }} -o wide)
         echo "$pods" > artifacts/${{ env.namespace }}/pods.txt
-        PODS_TABLE=$(kubectl get pods -n {{ env.namespace }} -o wide)    
+        PODS_TABLE=$(kubectl get pods -n ${{ env.namespace }} -o wide)    
         cat <<EOF >> $GITHUB_OUTPUT
         logging_pods<<END
         $PODS_TABLE
