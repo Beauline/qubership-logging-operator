@@ -449,7 +449,7 @@ jobs:
 
     - name: Save opensearch artifacts
       if: always()
-      id: 
+      id: opensearch_artifacts
       run: |
         mkdir -p "artifacts/${{ env.opensearch_namespace }}"
         pods=$(kubectl get pods -n "${{ env.opensearch_namespace }} -o wide)" 
