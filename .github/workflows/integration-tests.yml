@@ -454,7 +454,7 @@ jobs:
         mkdir -p "artifacts/${{ env.opensearch_namespace }}"
         pods=$(kubectl get pods -n ${{ env.opensearch_namespace }} -o wide)
         echo "$pods" > artifacts/${{ env.opensearch_namespace }}/pods.txt
-        PODS_TABLE=$(kubectl get pods -n ${{ env.opensearch_namespace }} -o wide)    
+        PODS_TABLE=$(kubectl get pods -n ${{ env.opensearch_namespace }} -o wide)
         cat <<EOF >> $GITHUB_OUTPUT
         opensearch_pods<<END
         $PODS_TABLE
@@ -485,7 +485,7 @@ jobs:
         mkdir -p "artifacts/${{ env.namespace }}"
         pods=$(kubectl get pods -n ${{ env.namespace }} -o wide)
         echo "$pods" > artifacts/${{ env.namespace }}/pods.txt
-        PODS_TABLE=$(kubectl get pods -n ${{ env.namespace }} -o wide)    
+        PODS_TABLE=$(kubectl get pods -n ${{ env.namespace }} -o wide)
         cat <<EOF >> $GITHUB_OUTPUT
         logging_pods<<END
         $PODS_TABLE
@@ -539,13 +539,13 @@ jobs:
         echo -e "Opensearch version: ${{ env.opensearch_version }}" >> $GITHUB_STEP_SUMMARY
         echo "Cluster status:" >> $GITHUB_STEP_SUMMARY
         echo '```json' >> $GITHUB_STEP_SUMMARY
-        echo '${{ steps.check_opensearch_health.outputs.cluster_status }}' | jq . || echo 'unknown' >> $GITHUB_STEP_SUMMARY
+        echo '${{ steps.check_opensearch_health.outputs.cluster_status }}' | jq . >> $GITHUB_STEP_SUMMARY || echo 'unknown' >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
         echo 'Pods running in opensearch namespace:' >> $GITHUB_STEP_SUMMARY
         echo '```sh' >> $GITHUB_STEP_SUMMARY
         echo "${{ steps.opensearch_artifacts.outputs.opensearch_pods || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
-        
+
         echo "## Install logging operator" >> $GITHUB_STEP_SUMMARY
         echo "Check graylog status: ${{ steps.check_graylog.outputs.status || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo "${{ steps.check_graylog.outputs.details || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
@@ -557,9 +557,10 @@ jobs:
         echo "## Check integration tests results" >> $GITHUB_STEP_SUMMARY
         echo "Check integration tests status: ${{ steps.check_integration_tests.outputs.status || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo "${{ steps.check_integration_tests.outputs.details || '' }}" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
         echo "Total tests: ${{ steps.check_integration_tests.outputs.total || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo "Failed tests: ${{ steps.check_integration_tests.outputs.failed || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo "Skipped tests: ${{ steps.check_integration_tests.outputs.skipped || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo "Passed tests: ${{ steps.check_integration_tests.outputs.passed || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo "${{ steps.check_integration_tests.outputs.warning || '' }}" >> $GITHUB_STEP_SUMMARY
-        
+        echo '```' >> $GITHUB_STEP_SUMMARY
