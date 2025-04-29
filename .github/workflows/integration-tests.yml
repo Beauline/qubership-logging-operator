@@ -160,17 +160,17 @@ jobs:
         cluster_status=$(kubectl exec -n ${{ env.opensearch_namespace }} opensearch-0 -- curl -s http://localhost:9200/_cluster/health?pretty -u admin:admin)
         if [[ "echo $cluster_status | jq -r .status"  = "yellow" ]]; then
           echo "::error::❌ Opensearch cluster status is YELLOW. Check opensearch logs."
-          echo "status=❌ failure" >> $GITHUB_OUTPUT
+          echo "status=failure❌" >> $GITHUB_OUTPUT
           echo "cluster_status=$(echo $cluster_status | jq -c )" >> $GITHUB_OUTPUT && echo -e "Cluster status:\n$cluster_status"
           exit 1
         elif [[ "echo $cluster_status | jq -r .status"  = "red" ]]; then
           echo "::error::❌ Opensearch cluster status is RED. Check opensearch logs."
-          echo "status=❌ failure" >> $GITHUB_OUTPUT
+          echo "status=failure❌" >> $GITHUB_OUTPUT
           echo "cluster_status=$(echo $cluster_status | jq -c )" >> $GITHUB_OUTPUT && echo -e "Cluster status:\n$cluster_status"
           exit 1
         else
           echo "✅ Opensearch cluster status is GREEN."
-          echo "status=✅ success" >> $GITHUB_OUTPUT
+          echo "status=success✅" >> $GITHUB_OUTPUT
           echo "cluster_status=$(echo $cluster_status | jq -c )" >> $GITHUB_OUTPUT && echo -e "Cluster status:\n$cluster_status"
         fi
       shell: bash
