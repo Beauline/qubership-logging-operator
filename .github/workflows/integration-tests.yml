@@ -185,7 +185,7 @@ jobs:
         echo '```json' >> $GITHUB_STEP_SUMMARY
 
         echo '${{ steps.check_opensearch_health.outputs.cluster_status }}' | jq . >> $GITHUB_STEP_SUMMARY
-        echo '```'
+        echo '```' >> $GITHUB_STEP_SUMMARY
 
     # - name: Wait for Dev Docker Build completion
     #   uses: kachick/wait-other-jobs@v3.8.0
