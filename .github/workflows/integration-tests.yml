@@ -454,7 +454,12 @@ jobs:
         mkdir -p "artifacts/${{ env.opensearch_namespace }}"
         pods=$(kubectl get pods -n ${{ env.opensearch_namespace }} -o wide)
         echo "$pods" > artifacts/${{ env.opensearch_namespace }}/pods.txt
-        {echo 'opensearch_pods<<EOF'; echo "$pods";echo 'EOF'} >> $GITHUB_OUTPUT
+        PODS_TABLE=$(kubectl get pods -n {{ env.opensearch_namespace }} -o wide)    
+        cat <<EOF >> $GITHUB_OUTPUT
+        opensearch_pods<<END
+        $PODS_TABLE
+        END
+        EOF
         kubectl get events -n "${{ env.opensearch_namespace }}" --sort-by=.metadata.creationTimestamp > artifacts/${{ env.opensearch_namespace }}/events.txt
         kubectl get pods -n "${{ env.opensearch_namespace }}" -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.spec.containers[*].name}{"\n"}{end}' | while read -r pod containers; do
           for container in $containers; do
@@ -480,7 +485,12 @@ jobs:
         mkdir -p "artifacts/${{ env.namespace }}"
         pods=$(kubectl get pods -n ${{ env.namespace }} -o wide)
         echo "$pods" > artifacts/${{ env.namespace }}/pods.txt
-        {echo 'logging_pods<<EOF'; echo "$pods";echo 'EOF'} >> $GITHUB_OUTPUT
+        PODS_TABLE=$(kubectl get pods -n {{ env.namespace }} -o wide)    
+        cat <<EOF >> $GITHUB_OUTPUT
+        logging_pods<<END
+        $PODS_TABLE
+        END
+        EOF
         kubectl get events -n "${{ env.namespace }}" --sort-by=.metadata.creationTimestamp > artifacts/${{ env.namespace }}/events.txt
         kubectl get pods -n "${{ env.namespace }}" -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.spec.containers[*].name}{"\n"}{end}' | while read -r pod containers; do
           for container in $containers; do
