@@ -344,7 +344,6 @@ jobs:
               kubectl get pods -n ${{ env.namespace }}
               sleep ${{ env.delay }}
               ((attempt++))
-            fi
           else
             kubectl get pods -n ${{ env.namespace }}
             pod_events=$(kubectl events -n ${{ env.namespace }} --for pod/"$(echo $pod | jq -r '.metadata.name')")
