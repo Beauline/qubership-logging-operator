@@ -402,7 +402,7 @@ jobs:
                 echo "failed=$failed" >> $GITHUB_OUTPUT
                 echo "skipped=$skipped" >> $GITHUB_OUTPUT
                 echo "passed=$passed" >> $GITHUB_OUTPUT
-                TEST_RESULTS=$(echo "$logs" | awk -v RS='\r?\n' '/^==============================================================================$/ && !found {found=1; next} found && /^Output:/ {exit} found')
+                TEST_RESULTS=$(echo "$logs" | awk -v RS='\r?\n' '/^==============================================================================$/ && !found {found=1; print; next} found && /^Output:/ {exit} found')
         cat <<EOF >> $GITHUB_OUTPUT
         test_results<<END
         $TEST_RESULTS
