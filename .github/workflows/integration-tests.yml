@@ -133,13 +133,13 @@ jobs:
         attempt=1
         max_attempts=${{ env.max_attempts }}
         while [[ $attempt -le $max_attempts ]]; do
-          echo "Attempt $attempt/$max_attempts: Checking opensearch-status-provisioner pod status..."
-          phase=$(kubectl get pod -l name=opensearch-status-provisioner -n ${{ env.opensearch_namespace }} -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
-          problem_pods=$(kubectl get pods -n ${{ env.opensearch_namespace }} | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName" 2>/dev/null)
+          problem_pods=$(kubectl get pods -n ${{ env.opensearch_namespace }} 2>/dev/null | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName")
           if [[ -n "$problem_pods" ]]; then
             echo "::error::❌ Some images cannot be pulled:\n$problem_pods"
             exit 1
           fi
+          echo "Attempt $attempt/$max_attempts: Checking opensearch-status-provisioner pod status..."
+          phase=$(kubectl get pod -l name=opensearch-status-provisioner -n ${{ env.opensearch_namespace }} -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
           if [[ "$phase" == "Succeeded" ]]; then
             echo "✅ Opensearch status provisioner job has succeeded."
             break
