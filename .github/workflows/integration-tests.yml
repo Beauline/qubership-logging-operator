@@ -135,6 +135,11 @@ jobs:
         while [[ $attempt -le $max_attempts ]]; do
           echo "Attempt $attempt/$max_attempts: Checking opensearch-status-provisioner pod status..."
           phase=$(kubectl get pod -l name=opensearch-status-provisioner -n ${{ env.opensearch_namespace }} -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
+          problem_pods=$(kubectl get pods -n {{ env.opensearch_namespace }} | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName")
+          if [[ -n "$problem_pods" ]]; then
+            echo "::error::❌ Some images cannot be pulled:\n$problem_pods"
+            exit 1
+          fi
           if [[ "$phase" == "Succeeded" ]]; then
             echo "✅ Opensearch status provisioner job has succeeded."
             break
@@ -174,19 +179,6 @@ jobs:
           echo "cluster_status=$(echo $cluster_status | jq -c )" >> $GITHUB_OUTPUT && echo -e "Cluster status:\n$cluster_status"
         fi
       shell: bash
-
-    # - name: Wait for Dev Docker Build completion
-    #   uses: kachick/wait-other-jobs@v3.8.0
-    #   timeout-minutes: 10
-    #   with:
-    #     wait-list: |
-    #       [
-    #         {
-    #           "workflowFile": "docker-dev.yml",
-    #           "jobName": "Build Docker Images",
-    #           "jobMatchMode": "prefix"
-    #         }
-    #       ]
 
     - name: Create values for logging operator installation
       run: |
@@ -239,6 +231,11 @@ jobs:
         attempt=1
         max_attempts=${{ env.max_attempts }}
         while [[ $attempt -le $max_attempts ]]; do
+          problem_pods=$(kubectl get pods -n {{ env.namespace }} | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName" 2>/dev/null)
+          if [[ -n "$problem_pods" ]]; then
+            echo -e "::error::❌ Some images cannot be pulled:\n$problem_pods"
+            exit 1
+          fi
           echo "Attempt $attempt/$max_attempts: Checking logging-operator pod status..."
           pod=$(kubectl get pod -l name=logging-service-operator -n ${{ env.namespace }} -o jsonpath='{.items[0]}')
           phase=$(echo "$pod" | jq -r '.status.phase')
@@ -253,17 +250,10 @@ jobs:
             sleep ${{ env.delay }}
             ((attempt++))
           elif [[ "$phase" == "Pending" && "$scheduled" == "True" ]]; then
-            images=$(echo "$pod" | jq -r '.status.containerStatuses[] | select(.state.waiting.reason == "ImagePullBackOff") | .image' 2>/dev/null)
-            if [[ -n  "$images" ]]; then
-              kubectl get pods -n ${{ env.namespace }}
-              echo -e "::error::❌ Some images cannot be pulled:\n$images"
-              exit 1
-            else
               echo "Logging operator status: $phase. Retrying in ${{ env.delay }} seconds..."
               kubectl get pods -n ${{ env.namespace }}
               sleep ${{ env.delay }}
               ((attempt++))
-            fi
           else
             pod_events=$(kubectl events -n ${{ env.namespace }} --for pod/"$(echo $pod | jq -r '.metadata.name')")
             echo "::error::❌ Logging operator pod cannot start"
@@ -287,6 +277,11 @@ jobs:
         attempt=1
         max_attempts=${{ env.max_attempts }}
         while [[ $attempt -le $max_attempts ]]; do
+          problem_pods=$(kubectl get pods -n {{ env.namespace }} | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName")
+          if [[ -n "$problem_pods" ]]; then
+            echo "::error::❌ Some images cannot be pulled:\n$problem_pods"
+            exit 1
+          fi
           echo "Attempt $attempt/$max_attempts: Checking graylog pod status..."
           pod=$(kubectl get pod -l name=graylog -n ${{ env.namespace }} -o jsonpath='{.items[0]}')
           phase=$(echo "$pod" | jq -r '.status.phase')
@@ -303,19 +298,10 @@ jobs:
             sleep ${{ env.delay }}
             ((attempt++))
           elif [[ "$phase" == "Pending" && "$scheduled" == "True" ]]; then
-            images=$(echo "$pod" | jq -r '.status.containerStatuses[] | select(.state.waiting.reason == "ImagePullBackOff") | .image' 2>/dev/null)
-            if [[ -n  "$images" ]]; then
-              kubectl get pods -n ${{ env.namespace }}
-              echo -e "::error::❌ Some images cannot be pulled:\n$images"
-              echo "status=failure" >> $GITHUB_OUTPUT
-              echo "details=Some images cannot be pulled:\n$images" >> $GITHUB_OUTPUT
-              exit 1
-            else
               echo "Graylog status: $phase. Retrying in ${{ env.delay }} seconds..."
               kubectl get pods -n ${{ env.namespace }}
               sleep ${{ env.delay }}
               ((attempt++))
-            fi
           else
             pod_events=$(kubectl events -n ${{ env.namespace }} --for pod/"$(echo $pod | jq -r '.metadata.name')")
             echo "::error::❌ Graylog pod cannot start"
@@ -336,6 +322,11 @@ jobs:
         attempt=1
         max_attempts=${{ env.max_attempts }}
         while [[ $attempt -le $max_attempts ]]; do
+          problem_pods=$(kubectl get pods -n {{ env.namespace }} | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName")
+          if [[ -n "$problem_pods" ]]; then
+            echo "::error::❌ Some images cannot be pulled:\n$problem_pods"
+            exit 1
+          fi
           echo "Attempt $attempt/$max_attempts: Checking integration-tests pod status..."
           pod=$(kubectl get pod -l name=logging-integration-tests-runner -n ${{ env.namespace }} -o jsonpath='{.items[0]}')
           phase=$(echo "$pod" | jq -r '.status.phase')
@@ -349,12 +340,6 @@ jobs:
             sleep ${{ env.delay }}
             ((attempt++))
           elif [[ "$phase" == "Pending" && "$scheduled" == "True" ]]; then
-            images=$(echo "$pod" | jq -r '.status.containerStatuses[] | select(.state.waiting.reason == "ImagePullBackOff") | .image' 2>/dev/null)
-            if [[ -n  "$images" ]]; then
-              kubectl get pods -n ${{ env.namespace }}
-              echo -e "::error::❌ Some images cannot be pulled:\n$images"
-              exit 1
-            else
               echo "Integration tests pod status: $phase. Retrying in ${{ env.delay }} seconds..."
               kubectl get pods -n ${{ env.namespace }}
               sleep ${{ env.delay }}
