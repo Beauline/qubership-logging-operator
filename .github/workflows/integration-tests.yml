@@ -135,7 +135,7 @@ jobs:
         while [[ $attempt -le $max_attempts ]]; do
           echo "Attempt $attempt/$max_attempts: Checking opensearch-status-provisioner pod status..."
           phase=$(kubectl get pod -l name=opensearch-status-provisioner -n ${{ env.opensearch_namespace }} -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
-          problem_pods=$(kubectl get pods -n ${{ env.opensearch_namespace }} | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName")
+          problem_pods=$(kubectl get pods -n ${{ env.opensearch_namespace }} | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName" 2>/dev/null)
           if [[ -n "$problem_pods" ]]; then
             echo "::error::❌ Some images cannot be pulled:\n$problem_pods"
             exit 1
@@ -277,7 +277,7 @@ jobs:
         attempt=1
         max_attempts=${{ env.max_attempts }}
         while [[ $attempt -le $max_attempts ]]; do
-          problem_pods=$(kubectl get pods -n ${{ env.namespace }} | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName")
+          problem_pods=$(kubectl get pods -n ${{ env.namespace }} | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName" 2>/dev/null)
           if [[ -n "$problem_pods" ]]; then
             echo "::error::❌ Some images cannot be pulled:\n$problem_pods"
             exit 1
@@ -322,7 +322,7 @@ jobs:
         attempt=1
         max_attempts=${{ env.max_attempts }}
         while [[ $attempt -le $max_attempts ]]; do
-          problem_pods=$(kubectl get pods -n ${{ env.namespace }} | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName")
+          problem_pods=$(kubectl get pods -n ${{ env.namespace }} | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName" 2>/dev/null)
           if [[ -n "$problem_pods" ]]; then
             echo "::error::❌ Some images cannot be pulled:\n$problem_pods"
             exit 1
@@ -549,33 +549,33 @@ jobs:
       if: always()
       run: |
         echo "## Install opensearch" >> $GITHUB_STEP_SUMMARY
-        echo "Check opensearch cluster health: ${{ steps.check_opensearch_health.outputs.status || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "Check opensearch cluster health: ${{ steps.check_opensearch_health.outputs.status || '❓unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo -e "Opensearch version: ${{ env.opensearch_version }}" >> $GITHUB_STEP_SUMMARY
         echo "Cluster status:" >> $GITHUB_STEP_SUMMARY
         echo '```json' >> $GITHUB_STEP_SUMMARY
-        echo '${{ steps.check_opensearch_health.outputs.cluster_status }}' | jq . >> $GITHUB_STEP_SUMMARY || echo 'unknown' >> $GITHUB_STEP_SUMMARY
+        echo '${{ steps.check_opensearch_health.outputs.cluster_status }}' | jq . >> $GITHUB_STEP_SUMMARY || echo '❓unknown' >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
         echo 'Pods running in opensearch namespace:' >> $GITHUB_STEP_SUMMARY
         echo '```sh' >> $GITHUB_STEP_SUMMARY
-        echo "${{ steps.opensearch_artifacts.outputs.opensearch_pods || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.opensearch_artifacts.outputs.opensearch_pods || '❓unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
 
         echo "## Install logging operator" >> $GITHUB_STEP_SUMMARY
-        echo "Check graylog status: ${{ steps.check_graylog.outputs.status || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
-        echo "${{ steps.check_graylog.outputs.details || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "Check graylog status: ${{ steps.check_graylog.outputs.status || '❓unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.check_graylog.outputs.details || '❓unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo 'Pods running in logging namespace:' >> $GITHUB_STEP_SUMMARY
         echo '```sh' >> $GITHUB_STEP_SUMMARY
-        echo "${{ steps.logging_artifacts.outputs.logging_pods || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.logging_artifacts.outputs.logging_pods || '❓unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
 
         echo "## Check integration tests results" >> $GITHUB_STEP_SUMMARY
-        echo "Check integration tests status: ${{ steps.check_integration_tests.outputs.status || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "Check integration tests status: ${{ steps.check_integration_tests.outputs.status || '❓unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo "${{ steps.check_integration_tests.outputs.details || '' }}" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
-        echo "Total tests: ${{ steps.check_integration_tests.outputs.total || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
-        echo "Failed tests: ${{ steps.check_integration_tests.outputs.failed || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
-        echo "Skipped tests: ${{ steps.check_integration_tests.outputs.skipped || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
-        echo "Passed tests: ${{ steps.check_integration_tests.outputs.passed || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "Total tests: ${{ steps.check_integration_tests.outputs.total || '❓unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "Failed tests: ${{ steps.check_integration_tests.outputs.failed || '❓unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "Skipped tests: ${{ steps.check_integration_tests.outputs.skipped || '❓unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "Passed tests: ${{ steps.check_integration_tests.outputs.passed || '❓unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo "${{ steps.check_integration_tests.outputs.warning || '' }}" >> $GITHUB_STEP_SUMMARY
         echo "${{ steps.check_integration_tests.outputs.details || '' }}" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
@@ -585,6 +585,6 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### Test Summary" >> $GITHUB_STEP_SUMMARY
         echo '```sh' >> $GITHUB_STEP_SUMMARY
-        echo "${{ steps.check_integration_tests.outputs.test_results || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.check_integration_tests.outputs.test_results || '❓unknown' }}" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
         echo "</details>" >> $GITHUB_STEP_SUMMARY
