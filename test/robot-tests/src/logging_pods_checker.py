@@ -41,13 +41,23 @@ if __name__ == '__main__':
 
     print("Checking logging agents (fluentd/fluentbit) are ready")
     timeout_start = time.time()
+    numberAvailable = 0
+    desiredNumberScheduled = 0
     while time.time() < timeout_start + timeout:
         try:
             daemon_sets = k8s_lib.get_daemon_sets(namespace)
             for daemon_set in daemon_sets:
                 name = daemon_set.metadata.name
-                numberAvailable = daemon_set.status.numberAvailable if daemon_set.status.numberAvailable is not None else 0
-                desiredNumberScheduled = daemon_set.status.desiredNumberScheduled if daemon_set.status.desiredNumberScheduled is not None else 0
+                numberAvailable = (
+                    daemon_set.status.numberAvailable
+                    if daemon_set.status.numberAvailable is not None
+                    else 0
+                )
+                desiredNumberScheduled = (
+                    daemon_set.status.desiredNumberScheduled
+                    if daemon_set.status.desiredNumberScheduled is not None
+                    else 0
+                )
                 print(
                     f'[Check status] {name} daemon sets: {desiredNumberScheduled}, ready daemon sets:'
                     f' {numberAvailable}')
