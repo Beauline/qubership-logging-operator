@@ -46,8 +46,8 @@ if __name__ == '__main__':
             daemon_sets = k8s_lib.get_daemon_sets(namespace)
             for daemon_set in daemon_sets:
                 name = daemon_set.metadata.name
-                numberAvailable = daemon_set.status.numberAvailable
-                desiredNumberScheduled = daemon_set.status.desiredNumberScheduled
+                numberAvailable = daemon_set.status.numberAvailable if daemon_set.status.numberAvailable is not None else 0
+                desiredNumberScheduled = daemon_set.status.desiredNumberScheduled if daemon_set.status.desiredNumberScheduled is not None else 0
                 print(
                     f'[Check status] {name} daemon sets: {desiredNumberScheduled}, ready daemon sets:'
                     f' {numberAvailable}')
