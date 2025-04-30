@@ -133,7 +133,7 @@ jobs:
         attempt=1
         max_attempts=${{ env.max_attempts }}
         while [[ $attempt -le $max_attempts ]]; do
-          problem_pods=$(kubectl get pods -n ${{ env.opensearch_namespace }} | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName" 2>/dev/null)
+          problem_pods=$(kubectl get pods -n ${{ env.opensearch_namespace }} --no-headers 2>/dev/null | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName" || true)
           if [[ -n "$problem_pods" ]]; then
             echo -e "::error::❌ Some images cannot be pulled:\n$problem_pods"
             exit 1
@@ -231,7 +231,7 @@ jobs:
         attempt=1
         max_attempts=${{ env.max_attempts }}
         while [[ $attempt -le $max_attempts ]]; do
-          problem_pods=$(kubectl get pods -n ${{ env.namespace }} | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName" 2>/dev/null)
+          problem_pods=$(kubectl get pods -n ${{ env.namespace }} 2>/dev/null | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName" || true)
           if [[ -n "$problem_pods" ]]; then
             echo -e "::error::❌ Some images cannot be pulled:\n$problem_pods"
             exit 1
@@ -277,7 +277,7 @@ jobs:
         attempt=1
         max_attempts=${{ env.max_attempts }}
         while [[ $attempt -le $max_attempts ]]; do
-          problem_pods=$(kubectl get pods -n ${{ env.namespace }} | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName" 2>/dev/null)
+          problem_pods=$(kubectl get pods -n ${{ env.namespace }} 2>/dev/null | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName" || true)
           if [[ -n "$problem_pods" ]]; then
             echo -e "::error::❌ Some images cannot be pulled:\n$problem_pods"
             exit 1
@@ -322,7 +322,7 @@ jobs:
         attempt=1
         max_attempts=${{ env.max_attempts }}
         while [[ $attempt -le $max_attempts ]]; do
-          problem_pods=$(kubectl get pods -n ${{ env.namespace }} | grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName" 2>/dev/null)
+          problem_pods=$(kubectl get pods -n ${{ env.namespace }} 2>/dev/null| grep -E "ImagePullBackOff|ErrImagePull|InvalidImageName" || true)
           if [[ -n "$problem_pods" ]]; then
             echo -e"::error::❌ Some images cannot be pulled:\n$problem_pods"
             exit 1
