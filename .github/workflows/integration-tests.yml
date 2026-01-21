@@ -35,9 +35,9 @@ permissions:
 
 jobs:
   Wait-for-images:
-    if: |
-        github.event.pull_request.user.login != 'dependabot[bot]' &&
-        github.event.pull_request.user.login != 'renovate[bot]'
+    # if: |
+    #     github.event.pull_request.user.login != 'dependabot[bot]' &&
+    #     github.event.pull_request.user.login != 'renovate[bot]'
     runs-on: ubuntu-latest
     outputs:
       conclusion: ${{ steps.wait.outputs.conclusion }}
