@@ -5,25 +5,35 @@ on:
   push:
     branches:
     - '**'
-    paths-ignore:
-    - '.github/**'
-    - 'docs/**'
-    - 'CODE-OF-CONDUCT.md'
-    - 'CONTRIBUTING.md'
-    - 'LICENSE'
-    - 'README.md'
-    - 'SECURITY.md'
+    paths:
+    - '**'
+    - '!.github/**'
+    - '.github/workflows/integration-tests.yaml'
+    - '.github/workflows/build.yaml'
+    - '!docs/**'
+    - '!CODE-OF-CONDUCT.md'
+    - '!CONTRIBUTING.md'
+    - '!LICENSE'
+    - '!README.md'
+    - '!SECURITY.md'
   pull_request:
     branches:
     - '**'
-    paths-ignore:
-    - '.github/**'
-    - 'docs/**'
-    - 'CODE-OF-CONDUCT.md'
-    - 'CONTRIBUTING.md'
-    - 'LICENSE'
-    - 'README.md'
-    - 'SECURITY.md'
+    paths:
+    - '**'
+    - '!.github/**'
+    - '.github/workflows/integration-tests.yaml'
+    - '.github/workflows/build.yaml'
+    - '!docs/**'
+    - '!CODE-OF-CONDUCT.md'
+    - '!CONTRIBUTING.md'
+    - '!LICENSE'
+    - '!README.md'
+    - '!SECURITY.md'
+
+permissions:
+  contents: read
+  packages: write
 
 concurrency:
   # On main/release, we don't want any jobs cancelled so the sha is used to name the group
