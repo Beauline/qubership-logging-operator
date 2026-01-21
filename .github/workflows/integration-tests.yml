@@ -51,12 +51,12 @@ jobs:
 
   Monitoring-Pipeline:
     needs: [Wait-for-images]
-    if: |
-      needs.Wait-for-images.outputs.conclusion == 'success' &&
-        (
-          github.event.pull_request.user.login != 'dependabot[bot]' &&
-          github.event.pull_request.user.login != 'renovate[bot]'
-        )
+    if: needs.Wait-for-images.outputs.conclusion == 'success'
+      # &&
+      # (
+      #   github.event.pull_request.user.login != 'dependabot[bot]' &&
+      #   github.event.pull_request.user.login != 'renovate[bot]'
+      # )
     uses: Beauline/qubership-test-pipelines/.github/workflows/logging.yaml@main
     with:
       service_branch: ${{ github.sha }}
