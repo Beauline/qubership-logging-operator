@@ -3,7 +3,8 @@ name: Run Logging Pipeline
 
 on:
   push:
-    branches: [main]
+    branches:
+    - '**'
     paths:
     - '**'
     - '!.github/**'
